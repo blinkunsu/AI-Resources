@@ -35,8 +35,8 @@ class DemoModel:
     """Deterministic offline planner for a credential-free demo."""
 
     def propose(self, messages: list[dict]) -> dict:
-        if messages[-1]["role"] == "tool":
-            return {"answer": messages[-1]["content"]}
+        if messages[-1]["content"].startswith("工具执行结果："):
+            return {"answer": messages[-1]["content"].removeprefix("工具执行结果：")}
         text = messages[-1]["content"].strip()
         low = text.lower()
         if text.startswith(("添加待办", "待办：", "todo ")):

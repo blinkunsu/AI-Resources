@@ -32,6 +32,12 @@ class Agent:
 
     def ask(self, text: str) -> str:
         messages = [{"role": "user", "content": text}]
+        consent = {
+            "add_task": ("待办", "提醒", "todo"),
+            "complete_task": ("完成", "划掉"),
+            "remember": ("记住", "保存"),
+            "forget": ("忘记", "删除"),
+        }
         for _ in range(3):
             action = self.model.propose(messages)
             if not isinstance(action, dict):
@@ -39,7 +45,9 @@ class Agent:
             if "answer" in action:
                 return str(action["answer"])
             name = action.get("tool")
+            if name in consent and not any(marker in text.lower() for marker in consent[name]):
+                return "这项操作会修改数据，请明确告诉我你想添加、完成、记住或删除什么。"
             result = self.run_tool(name, action.get("arguments", {}))
             messages.append({"role": "assistant", "content": str(action)})
-            messages.append({"role": "tool", "content": result})
+            messages.append({"role": "user", "content": "工具执行结果：" + result})
         return "操作步数达到上限，请拆分请求。"

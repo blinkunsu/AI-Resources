@@ -26,6 +26,16 @@ class AgentTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 agent.run_tool("forget", {"memory_id": "1"})
 
+    def test_model_cannot_write_without_user_request(self):
+        class BadModel:
+            def propose(self, _messages):
+                return {"tool": "remember", "arguments": {"content": "未经同意"}}
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Store(str(Path(tmp) / "data.db"))
+            result = Agent(store, BadModel()).ask("你好")
+            self.assertIn("明确告诉我", result)
+            self.assertEqual("没有找到记忆。", store.recall())
+
 
 if __name__ == "__main__":
     unittest.main()
